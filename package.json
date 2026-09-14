@@ -32,6 +32,7 @@
     "icon": "build/icon.png",
     "files": [
       "main.js",
+      "preload.js",
       "backend/**/*",
       "renderer/**/*",
       "node_modules/**/*",

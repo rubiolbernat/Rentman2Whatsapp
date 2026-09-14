@@ -6,8 +6,10 @@
 // finestra només mostra fitxers HTML/CSS/JS locals que hi parlen per
 // http://localhost:3001, exactament com feia el frontend web original.
 
-const { app, BrowserWindow, shell } = require("electron");
+const { app, BrowserWindow, shell, dialog, ipcMain } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("path");
+const fs = require("fs");
 
 const PORT = 3001;
 
@@ -29,6 +31,28 @@ function startBackend() {
   require("./backend/server.js");
 }
 
+// Compara la versió actual amb la que es va desar la darrera vegada que
+// l'app es va obrir (a un fitxeret dins de la carpeta d'usuari). Si són
+// diferents, vol dir que s'acaba d'instal·lar una actualització.
+let updateInfo = { justUpdated: false, version: app.getVersion(), previousVersion: null };
+function detectVersionChange() {
+  const versionFile = path.join(app.getPath("userData"), "last-version.txt");
+  const currentVersion = app.getVersion();
+  let previousVersion = null;
+  try {
+    previousVersion = fs.readFileSync(versionFile, "utf8").trim();
+  } catch (_) {
+    // primer cop que s'obre l'app: no hi ha fitxer encara, no és "actualització"
+  }
+  const justUpdated = Boolean(previousVersion && previousVersion !== currentVersion);
+  try {
+    fs.writeFileSync(versionFile, currentVersion);
+  } catch (e) {
+    console.warn("[updater] No s'ha pogut desar el fitxer de versió:", e.message);
+  }
+  updateInfo = { justUpdated, version: currentVersion, previousVersion };
+}
+
 function createWindow() {
   const iconPath = path.join(__dirname, "renderer", "E91.png");
   const win = new BrowserWindow({
@@ -41,6 +65,7 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 
@@ -56,8 +81,12 @@ function createWindow() {
 
 app.whenReady().then(() => {
   configureEnv();
+  detectVersionChange();
   startBackend();
   createWindow();
+  setupAutoUpdater();
+
+  ipcMain.handle("get-update-info", () => updateInfo);
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -70,3 +99,50 @@ app.on("window-all-closed", () => {
   // l'app (i amb ella, el backend, perquè viu al mateix procés).
   if (process.platform !== "darwin") app.quit();
 });
+
+// ---------------------------------------------------------------------
+// Actualitzacions automàtiques (electron-updater, via GitHub Releases).
+//
+// Nomes s'activa en un build empaquetat de veritat (app.isPackaged):
+// en desenvolupament (`npm start`) no hi ha "app-update.yml" i
+// electron-updater es queixaria sense sentit.
+//
+// Perque funcioni cal haver publicat una versio amb
+// `npm run publish:win` (o mac/linux), que puja l'instal.lador a un
+// "Release" del repositori de GitHub configurat a package.json ("build.publish").
+// ---------------------------------------------------------------------
+function setupAutoUpdater() {
+  if (!app.isPackaged) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("error", (err) => {
+    console.warn("[updater] Error comprovant actualitzacions:", err.message);
+  });
+
+  autoUpdater.on("update-downloaded", async (info) => {
+    const result = await dialog.showMessageBox({
+      type: "info",
+      title: "Actualització disponible",
+      message: `S'ha descarregat la versió ${info.version}. Vols reiniciar l'app ara per instal·lar-la?`,
+      buttons: ["Reiniciar ara", "Més tard"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+
+  // Primera comprovació uns segons després d'arrencar (no destorba l'inici),
+  // i després un cop cada 4 hores mentre l'app estigui oberta.
+  setTimeout(() => checkForUpdates(), 8000);
+  setInterval(() => checkForUpdates(), 4 * 60 * 60 * 1000);
+}
+
+function checkForUpdates() {
+  autoUpdater.checkForUpdates().catch((e) => {
+    console.warn("[updater] No s'ha pogut comprovar si hi ha actualitzacions:", e.message);
+  });
+}

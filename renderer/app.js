@@ -28,6 +28,30 @@ function hydrateIcons() {
 hydrateIcons();
 
 // ---------------------------------------------------------------------
+// Avís d'actualització (si l'app s'acaba d'obrir amb una versió diferent
+// a la de la darrera vegada, ve d'una actualització instal·lada per
+// electron-updater).
+// ---------------------------------------------------------------------
+if (window.electronAPI) {
+  window.electronAPI.getUpdateInfo().then((info) => {
+    if (info && info.justUpdated) {
+      showUpdateToast(info.version);
+    }
+  }).catch(() => {});
+}
+
+function showUpdateToast(version) {
+  const toast = el("updateToast");
+  toast.innerHTML = `${icon("checkCircle", 17)}<span>S'ha actualitzat a la versió ${escapeHtml(version)}</span>`;
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = icon("x", 14);
+  closeBtn.onclick = () => toast.classList.add("hidden");
+  toast.appendChild(closeBtn);
+  toast.classList.remove("hidden");
+  setTimeout(() => toast.classList.add("hidden"), 8000);
+}
+
+// ---------------------------------------------------------------------
 // Notificacions d'escriptori (opcional, no bloqueja res si es denega)
 // ---------------------------------------------------------------------
 if (typeof Notification !== "undefined" && Notification.permission === "default") {
