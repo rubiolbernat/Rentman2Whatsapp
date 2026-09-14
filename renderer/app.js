@@ -728,3 +728,10 @@ el("addAlwaysBtn").addEventListener("click", () => {
   el("alwaysName").value = "";
   el("alwaysPhone").value = "";
 });
+
+if (el("openLogBtn")) {
+  if (!window.electronAPI) el("openLogBtn").disabled = true;
+  el("openLogBtn").addEventListener("click", () => {
+    if (window.electronAPI) window.electronAPI.openLogFolder();
+  });
+}

@@ -8,10 +8,27 @@
 
 const { app, BrowserWindow, shell, dialog, ipcMain } = require("electron");
 const { autoUpdater } = require("electron-updater");
+const log = require("electron-log/main");
 const path = require("path");
 const fs = require("fs");
 
+// Registre en fitxer: com que l'app empaquetada NO té cap terminal
+// visible, tots els console.log/warn/error (tant d'aquest fitxer com del
+// backend, que ja en fa servir) van a parar a un fitxer que es pot obrir
+// sempre, encara que l'app no mostri res per pantalla.
+// Ubicació típica a Windows: %APPDATA%\Rentman WhatsApp\logs\main.log
+log.initialize();
+log.transports.file.level = "info";
+console.log(`[app] Registre a: ${log.transports.file.getFile().path}`);
+
 const PORT = 3001;
+
+process.on("uncaughtException", (err) => {
+  console.error("[app] Excepció no capturada:", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[app] Promesa rebutjada sense capturar:", reason);
+});
 
 function configureEnv() {
   // Carpeta d'usuari pròpia del sistema operatiu (persisteix entre
@@ -87,6 +104,9 @@ app.whenReady().then(() => {
   setupAutoUpdater();
 
   ipcMain.handle("get-update-info", () => updateInfo);
+  ipcMain.handle("open-log-folder", () => {
+    shell.openPath(path.dirname(log.transports.file.getFile().path));
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -114,6 +134,7 @@ app.on("window-all-closed", () => {
 function setupAutoUpdater() {
   if (!app.isPackaged) return;
 
+  autoUpdater.logger = log;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 

@@ -6,4 +6,5 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electronAPI", {
   getUpdateInfo: () => ipcRenderer.invoke("get-update-info"),
+  openLogFolder: () => ipcRenderer.invoke("open-log-folder"),
 });
