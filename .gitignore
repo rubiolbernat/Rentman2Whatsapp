@@ -1,0 +1,24 @@
+# Dependències (es regeneren amb "npm install", no cal versionar-les)
+node_modules/
+
+# Chromium de Puppeteer (pesa ~200MB, es torna a baixar amb "npm install")
+.puppeteer-cache/
+
+# Sortida de "npm run dist:*" / "npm run publish:*"
+dist/
+
+# Sessió de WhatsApp / dades locals, si mai es generen dins del projecte
+# en lloc de la carpeta d'usuari del sistema
+data/
+wwebjs_auth/
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Variables d'entorn / secrets -- MAI s'han de pujar al repositori
+.env
+.env.*
+*.token
+
+# Sistema operatiu
+.DS_Store
+Thumbs.db

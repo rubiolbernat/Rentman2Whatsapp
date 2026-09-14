@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8" />
+<title>Rentman → WhatsApp</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <nav id="rail">
+      <div class="rail-brand">
+        <img src="E91.png" alt="" onerror="this.style.display='none'" />
+        <span>Rentman ⇄ WA</span>
+      </div>
+      <button class="rail-btn active" data-section="rentman" data-icon="search"><span class="label">Rentman</span></button>
+      <button class="rail-btn" data-section="grups" data-icon="users"><span class="label">Grups</span></button>
+      <button class="rail-btn" data-section="manteniment" data-icon="wrench"><span class="label">Manteniment</span></button>
+      <button class="rail-btn" data-section="historial" data-icon="history"><span class="label">Historial</span></button>
+      <button class="rail-btn" data-section="connexio" data-icon="wifi"><span class="label">Connexió</span></button>
+      <button class="rail-btn" data-section="config" data-icon="settings"><span class="label">Configuració</span></button>
+    </nav>
+
+    <main>
+      <header id="section-title"></header>
+
+      <!-- ---------- Rentman ---------- -->
+      <section id="sec-rentman" class="section active">
+        <div class="section-inner">
+          <h2>Cerca un projecte</h2>
+          <p class="hint">Nom, número o ID tal com el veus a Rentman</p>
+          <div class="row">
+            <input id="projectSearch" type="text" placeholder="p. ex. Boda Martí o 2024-0231" />
+            <button id="searchProjectBtn" class="primary" data-icon="search">Cercar</button>
+          </div>
+          <label class="checkbox-row">
+            <input id="fullHistory" type="checkbox" />
+            <span>Cercar en tot l'històric</span>
+          </label>
+          <div id="rentmanStatus" class="banner hidden"></div>
+          <div id="projectResults" class="list"></div>
+
+          <div id="crewBlock" class="hidden">
+            <hr />
+            <h2 id="selectedProjectLabel"></h2>
+            <div id="crewList" class="list"></div>
+            <label>Nom del grup</label>
+            <input id="groupName" type="text" />
+            <button id="createBtn" class="primary" data-icon="userPlus">Crear grup a WhatsApp</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- Grups ---------- -->
+      <section id="sec-grups" class="section">
+        <div class="section-inner">
+          <div class="row space-between">
+            <h2>Grups existents</h2>
+            <button id="refreshGroupsBtn" class="icon-btn" data-icon="refresh" title="Actualitza"></button>
+          </div>
+          <input id="groupSearch" type="text" placeholder="Cerca un grup pel nom…" />
+          <div id="groupsStatus" class="banner hidden"></div>
+          <div id="groupsList" class="list"></div>
+        </div>
+      </section>
+
+      <!-- ---------- Manteniment ---------- -->
+      <section id="sec-manteniment" class="section">
+        <div class="section-inner">
+          <div class="row space-between">
+            <h2>Manteniment de grups</h2>
+            <button id="refreshLinksBtn" class="icon-btn" data-icon="refresh" title="Actualitza"></button>
+          </div>
+          <p class="hint">Res passa sol aquí: tota acció s'executa només quan tu la dispares.</p>
+          <div class="row">
+            <button id="cleanupThresholdBtn" class="primary" data-icon="wrench">Netejar els que superen el llindar</button>
+            <button id="cleanupSelectedBtn" class="danger-outline" data-icon="trash" disabled>Netejar seleccionats (0)</button>
+          </div>
+
+          <div id="maintenanceStatus" class="banner hidden"></div>
+          <div id="linksList" class="list"></div>
+        </div>
+      </section>
+
+      <!-- ---------- Historial ---------- -->
+      <section id="sec-historial" class="section">
+        <div class="section-inner">
+          <div class="row space-between">
+            <h2>Historial d'accions</h2>
+            <button id="refreshHistoryBtn" class="icon-btn" data-icon="refresh" title="Actualitza"></button>
+          </div>
+          <p class="hint">Registre informatiu: qui s'ha creat, netejat, enviat o canviat, i quan.</p>
+          <div id="historyList" class="list"></div>
+        </div>
+      </section>
+
+      <!-- ---------- Connexió ---------- -->
+      <section id="sec-connexio" class="section">
+        <div class="section-inner center-col">
+          <p class="hint" style="text-align:center; max-width:420px;">
+            Aquest servei connecta amb WhatsApp Web. La sessió es manté oberta encara que tanquis l'app.
+          </p>
+          <div id="waStatusBox">
+            <div id="waStatusText">Comprovant estat…</div>
+            <img id="waQr" class="hidden" alt="Codi QR de WhatsApp" />
+            <button id="logoutBtn" class="danger-outline hidden" data-icon="logout">Desconnectar sessió</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- Configuració ---------- -->
+      <section id="sec-config" class="section">
+        <div class="section-inner">
+          <h2>Configuració</h2>
+          <p class="hint">Es guarda només en aquest ordinador.</p>
+
+          <div class="card">
+            <h3>Rentman</h3>
+            <label>Token API</label>
+            <input id="token" type="password" placeholder="Configuració → Compte → Integracions" />
+            <h3 style="margin-top:16px;">WhatsApp</h3>
+            <label>Prefix de país predeterminat</label>
+            <input id="defaultPrefix" type="text" style="max-width:100px;" />
+            <button id="saveConfigBtn" class="primary" data-icon="save" style="margin-top:14px;">Desar canvis</button>
+            <span id="savedTick" class="hidden inline-ok"></span>
+          </div>
+
+          <div class="card">
+            <h3>Números que sempre s'afegeixen</h3>
+            <p class="hint">Es posen a tots els grups nous que creïs.</p>
+            <div id="alwaysList" class="list"></div>
+            <div class="row">
+              <input id="alwaysName" type="text" placeholder="Nom (p. ex. Jo)" />
+              <input id="alwaysPhone" type="text" placeholder="+34..." />
+              <button id="addAlwaysBtn" class="icon-btn" data-icon="plus"></button>
+            </div>
+          </div>
+
+          <p class="hint">
+            La neteja de grups antics no s'executa mai sola: sempre l'has de disparar tu des de la
+            pestanya Manteniment. El llindar de "dies des del final" es configura amb la variable
+            CLEANUP_DAYS_AFTER_END abans d'engegar l'app.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ---------- Modal genèric (detall de grup, confirmacions) ---------- -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div id="modalBox" class="modal-box"></div>
+  </div>
+
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
