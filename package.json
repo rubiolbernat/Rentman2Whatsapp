@@ -1,6 +1,6 @@
 {
   "name": "rentman-whatsapp-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "App d'escriptori (Electron) per crear i gestionar grups de WhatsApp a partir de projectes de Rentman.",
   "main": "main.js",
   "private": true,
